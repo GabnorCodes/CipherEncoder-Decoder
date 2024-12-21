@@ -6,25 +6,25 @@ import java.util.Map.Entry;
 
 public class DecryptionAlgorithm {
     private static String[] finalWords;
+    private static String encryptedMessage;
 
-    public static String rebuildMessageInOriginalOrder(String[] words, int[] originalIndices) {
-        String[] reorderedWords = new String[words.length];
+    public static String rebuildMessageInOriginalOrder(String[] tokens, int[] originalIndices) {
+        String[] reorderedTokens = new String[tokens.length];
 
-        for (int i = 0; i < words.length; i++) {
-            reorderedWords[originalIndices[i]] = words[i];
+        for (int i = 0; i < tokens.length; i++) {
+            reorderedTokens[originalIndices[i]] = tokens[i];
         }
 
         StringBuilder rebuiltMessage = new StringBuilder();
-        for (String word : reorderedWords) {
-            rebuiltMessage.append(word).append(" ");
+        for (String token : reorderedTokens) {
+            rebuiltMessage.append(token);
         }
 
-        return rebuiltMessage.toString().trim();
+        return rebuiltMessage.toString();
     }
 
     public static void substitution(Scanner scanner) {
         String outputFile = "output.txt";
-        String encryptedMessage = "";
 
         try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"));
              BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
@@ -43,14 +43,23 @@ public class DecryptionAlgorithm {
             }
 
             System.out.println("Encrypted Message: " + encryptedMessage);
+            // Tokenize input into words only, excluding punctuation and spaces
+            String[] tokens = encryptedMessage.toLowerCase().split("[^\\p{Alnum}]+"); // Split by non-alphanumeric characters
+            List<String> tokenizedWordsList = new ArrayList<>();
 
-            String[] words = encryptedMessage.split(" ");
-            String[] tokenizedWords = new String[words.length];
-            int[] originalIndices = new int[words.length];
-
-            for (int i = 0; i < words.length; i++) {
-                originalIndices[i] = i;
+            for (String token : tokens) {
+                if (!token.isEmpty()) { // Avoid empty strings from consecutive delimiters
+                    tokenizedWordsList.add(SavePatternWordPairs.tokenize(token));
+                }
             }
+
+            String[] tokenizedWords = tokenizedWordsList.toArray(new String[0]);
+            int[] originalIndices = new int[tokenizedWords.length];
+            for (int i = 0; i < tokenizedWords.length; i++) {
+                originalIndices[i] = i; // Maintain indices for reordering later
+            }
+
+
 
             HashMap<String, Set<String>> dict = SavePatternWordPairs.loadMapFromFile();
             if (dict == null || dict.isEmpty()) {
@@ -58,25 +67,20 @@ public class DecryptionAlgorithm {
                 return;
             }
 
-            for (int i = 0; i < words.length; i++) {
-                String pattern = SavePatternWordPairs.tokenize(words[i]);
-                tokenizedWords[i] = pattern;
-            }
-
-            sortByTokenRarity(tokenizedWords, words, dict, originalIndices);
+            sortByTokenRarity(tokenizedWords, tokens, dict, originalIndices);
 
             System.out.println("Sorted Tokenized Words: " + Arrays.toString(tokenizedWords));
-            System.out.println("Sorted Words: " + Arrays.toString(words));
+            System.out.println("Sorted Tokens: " + Arrays.toString(tokens));
             System.out.println("Original Indices: " + Arrays.toString(originalIndices));
 
             HashMap<Character, Character> replacedChars = new HashMap<>();
-            finalWords = Arrays.copyOf(words, words.length);
+            finalWords = Arrays.copyOf(tokens, tokens.length);
 
             Map.Entry<String[], HashMap<Character, Character>> map = new AbstractMap.SimpleEntry<>(finalWords, replacedChars);
             List<String> allSolutions = new ArrayList<>();
-            List<HashMap<Character,Character>> solutionKeys = new ArrayList<>();
+            List<HashMap<Character, Character>> solutionKeys = new ArrayList<>();
 
-            substituteWord(tokenizedWords, words, dict, originalIndices, 0, map, allSolutions, solutionKeys);
+            substituteWord(tokenizedWords, tokens, dict, originalIndices, 0, map, allSolutions, solutionKeys);
             System.out.print("\033[H\033[2J");
             System.out.flush();
             if (allSolutions.isEmpty()) {
@@ -85,8 +89,7 @@ public class DecryptionAlgorithm {
                 System.out.println("---------------------------------------------------------------------------------------------------------------");
                 if (allSolutions.size() > 1) {
                     System.out.println("There are " + allSolutions.size() + " possible solutions:");
-                }
-                else {
+                } else {
                     System.out.println("There is " + allSolutions.size() + " possible solution:");
                 }
                 System.out.println();
@@ -109,7 +112,7 @@ public class DecryptionAlgorithm {
                 System.out.println();
                 System.out.println("Please enter the name of the key: ");
                 String keyName = scanner.next();
-                
+
                 HashMap<Character, Character> solutionKey = solutionKeys.get(choice - 1);
                 HashMap<Character, Character> decryptionKey = new HashMap<>();
 
@@ -123,9 +126,9 @@ public class DecryptionAlgorithm {
                         decryptionKey.put(encryptedChar, encryptedChar);
                     }
                 }
-                
+
                 EncryptMenu.addToList(EncryptMenu.CreateKey(keyName, decryptionKey));
-                            
+
             }
 
         } catch (FileNotFoundException e) {
@@ -167,9 +170,8 @@ public class DecryptionAlgorithm {
                     if (index + 1 < tokenArray.length) {
                         substituteWord(tokenArray, wordArray, dict, originalIndices, index + 1, updatedState, allSolutions, solutionKeys);
                     } else {
-                        String solution = rebuildMessageInOriginalOrder(finalWords, originalIndices);
-                        allSolutions.add(solution);
                         solutionKeys.add(updatedState.getValue());
+                        allSolutions.add(CipherKey.decryptString(encryptedMessage, updatedState.getValue()));
                     }
                 }
             }

@@ -143,6 +143,31 @@ public class CipherKey implements java.io.Serializable {
             System.out.println("An error occurred while reading or writing the file: " + e.getMessage());
         }
     }
+
+    //Decrypt string method using regular lookup (not get decrypted character)
+    public static String decryptString(String input, HashMap<Character, Character> map) {
+        StringBuilder decryptedString = new StringBuilder();
+        for (char currentChar : input.toCharArray()) {
+            if (Character.isLetter(currentChar)) {
+                boolean isUpperCase = Character.isUpperCase(currentChar);
+                char lowerChar = Character.toLowerCase(currentChar);
+    
+                // Reverse lookup: find the original character for the cipher character
+                char decryptedChar = map.getOrDefault(lowerChar, lowerChar);
+    
+                // Match case
+                if (isUpperCase) {
+                    decryptedChar = Character.toUpperCase(decryptedChar);
+                } else {
+                    decryptedChar = Character.toLowerCase(decryptedChar);
+                }
+                decryptedString.append(decryptedChar);
+            } else {
+                decryptedString.append(currentChar); // Keep non-letters as is
+            }
+        }
+        return decryptedString.toString();
+    }
     
     // Helper method to reverse lookup the key
     private char getDecryptedCharacter(char cipherChar) {
