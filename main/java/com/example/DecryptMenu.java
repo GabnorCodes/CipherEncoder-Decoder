@@ -8,22 +8,20 @@ public class DecryptMenu {
     public static void main(String[] args, Scanner scanner) {
         ArrayList<CipherKey> keys = SavedKeys.loadKeys();
 
-        if (keys.isEmpty()) {
-            System.out.println("No keys found. Please create an encryption key first in the EncryptMenu.");
-            EncryptMenu.main(args, scanner);
-            return;
-        }
-
         System.out.println("Which key would you like to use for decryption?");
         System.out.println("Create new key: 1");
         int index = 1;
-        for (CipherKey key : keys) {
-            index++;
-            System.out.println(key.getName() + ": " + index);
+
+        if (!keys.isEmpty()) {
+            for (CipherKey key : keys) {
+                index++;
+                System.out.println(key.getName() + ": " + index);
+            }
         }
 
-        System.out.println("Clear Keys: " + (index + 1));
-        System.out.println("Back: " + (index + 2));
+        System.out.println("Decode Without Key: " + (index + 1));
+        System.out.println("Clear Keys: " + (index + 2));
+        System.out.println("Back: " + (index + 3));
         int input = scanner.nextInt();
 
         if (input > 1 && input <= keys.size() + 1) {
@@ -39,12 +37,17 @@ public class DecryptMenu {
 
             System.out.println("Decryption complete.");
             main(args, scanner); // Return to DecryptMenu after decryption
-        } else if (input == index + 2) {
+        } else if (input == index + 3) {
             Main.main(args); // Return to the main menu
-        } else if (input == (index + 1)) {
+        } else if (input == (index + 2)) {
             System.out.print("\033[H\033[2J");
             System.out.flush();
             SavedKeys.clear();
+            main(args, scanner);
+        } else if (input == (index + 1)) {
+            System.out.print("\033[H\033[2J");
+            System.out.flush();
+            DecryptionAlgorithm.substitution(scanner);
             main(args, scanner);
         } else if (input == 1) {
             System.out.print("\033[H\033[2J");

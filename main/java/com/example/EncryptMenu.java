@@ -69,6 +69,11 @@ public class EncryptMenu {
         return newKey;
     }
 
+    public static CipherKey CreateKey(String name, HashMap<Character, Character> substitutions) {
+        CipherKey newKey = new CipherKey(name, substitutions);
+        return newKey;
+    }
+
     public static void addToList(CipherKey key) {
         ArrayList<CipherKey> keys = new ArrayList<CipherKey>();
         if (SavedKeys.fileExists() == true) {
