@@ -19,7 +19,7 @@ Usage features:
 Next features to be added:
 - More possible cipher types other than substitution
 
-How the UI works with Spring Boot:
+**How the UI works with Spring Boot**:
 - The UI runs using a CipherController script containing get and post mappings which can be referenced within the html
 - These get and post mappings allow the UI to call different java methods necessary to run the script, and display stored information
 - Using the UI, the user can complete actions such as decrypting or encrypting a file, or even creating objects by passing the necessary parameters through forms
