@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Solution Selector</title>
+</head>
+<body>
+    <h1>Select the solution which is most likely correct</h1>
+    <form action="/cipher/selectSolution" method="post">
+        <select name="solutionIndex">
+            <!-- Loop through the solutions and use index as the value -->
+            <th:block th:each="solution, index : ${solutions}">
+                <option th:value="${index}" th:text="${solution}"></option>
+            </th:block>
+        </select><br><br>
+        <input type="submit" value="Select Solution">
+    </form>
+</body>
+</html>

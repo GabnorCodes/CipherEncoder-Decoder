@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decryption Algorithm</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .btn-really-big {
+            font-size: 1.5rem;
+            padding: .5rem 20rem;
+            border-radius: 1.5rem;
+        }
+
+        #loadingSpinner {
+            display: none;
+            margin-top: 20px;
+        }
+
+        body {
+            background-color: #f4f8fc;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .form-select {
+            font-size: 1.1rem;
+        }
+
+        .form-label {
+            font-size: 1.1rem;
+        }
+
+        .btn-submit {
+            font-size: 1.1rem;
+            padding: 10px 20px;
+            align-items: center;
+            justify-self: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 class="text-center text-primary">Decryption Algorithm</h1>
+
+    <!-- Decryption Button Form -->
+    <div class="text-center mt-4">
+        <form id="decryptionForm" action="/cipher/decryptAlgo" method="post" class="mb-4">
+            <button type="submit" class="btn btn-primary btn-really-big">Decrypt</button>
+        </form>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="text-center">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Key Creation Form -->
+    <h2>Create a New Key</h2>
+    <select id="solutionsDropdown" name="solutions" class="form-select mb-3">
+        <option value="">Select Solution</option>
+    </select>
+
+    <form id="createKeyForm">
+        <div class="mb-3">
+            <label for="keyName" class="form-label">Key Name:</label>
+            <input type="text" id="keyName" name="keyName" required class="form-control">
+        </div>
+
+        <button type="button" id="createKeyButton" class="btn btn-primary btn-submit">Create Key</button>
+    </form>
+
+    <!-- Back to Menu -->
+    <div class="mt-4">
+        <a href="/cipher/menu" class="btn btn-link">Go back to the menu</a>
+    </div>
+</div>
+
+<!-- Bootstrap JS (Optional for interactivity) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Function to fetch solution keys from the backend
+async function fetchSolutionKeys() {
+    const response = await fetch('/cipher/getSolutionKeys', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json'
+        }
+    });
+    if (!response.ok) {
+        throw new Error('Failed to fetch solution keys.');
+    }
+    return response.json(); // Expecting a list of solution keys
+}
+
+// Handle solution selection
+let selectedSolutionKey = null;
+
+document.getElementById('solutionsDropdown').addEventListener('change', async function() {
+    const selectedIndex = this.selectedIndex - 1; // Adjust for default "Select Solution" option
+    if (selectedIndex < 0) return;
+
+    // Show the loading spinner
+    document.getElementById('loadingSpinner').style.display = 'block';
+
+    try {
+        const solutionKeys = await fetchSolutionKeys(); // Fetch solution keys
+        selectedSolutionKey = solutionKeys[selectedIndex]; // Set the selected key
+        console.log('Selected Solution Key:', selectedSolutionKey);
+
+        // Hide the loading spinner once data is fetched
+        document.getElementById('loadingSpinner').style.display = 'none';
+    } catch (error) {
+        console.error('Error fetching solution keys:', error);
+        alert('Error: Unable to fetch solution keys.');
+
+        // Hide the loading spinner if there is an error
+        document.getElementById('loadingSpinner').style.display = 'none';
+    }
+});
+
+// Handle the creation of a new key without substitutions
+document.getElementById('createKeyButton').addEventListener('click', function() {
+    const keyName = document.getElementById('keyName').value;
+
+    if (!keyName) {
+        alert('Please enter a key name.');
+        return;
+    }
+
+    if (!selectedSolutionKey) {
+        alert('Please select a solution key.');
+        return;
+    }
+
+    const params = new URLSearchParams();
+    params.append('name', keyName);
+
+    // Loop through selectedSolutionKey and append substitutions
+    for (const [originalChar, substitutedChar] of Object.entries(selectedSolutionKey)) {
+        params.append(`substitution[${originalChar}]`, substitutedChar);
+    }
+
+    fetch('/cipher/createKey', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: params.toString()
+    })
+        .then(response => response.text())
+        .then(data => {
+            console.log('Success:', data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+});
+
+// Handle the decryption form submission
+document.getElementById('decryptionForm').addEventListener('submit', function(event) {
+    event.preventDefault();  // Prevent the form from submitting normally
+
+    // Show the loading spinner
+    document.getElementById('loadingSpinner').style.display = 'block';
+
+    fetch('/cipher/decryptAlgo', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            const solutionsDropdown = document.getElementById('solutionsDropdown');
+            solutionsDropdown.innerHTML = '';
+            const defaultOption = document.createElement('option');
+            defaultOption.value = "";
+            defaultOption.textContent = "Select Solution";
+            solutionsDropdown.appendChild(defaultOption);
+            
+            data.solutions.forEach(solution => {
+                const option = document.createElement('option');
+                option.value = solution;
+                option.textContent = solution;
+                solutionsDropdown.appendChild(option);
+            });
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Decrypt Menu</title>
+    <!-- Bootstrap CSS for better styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f8fc;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #007bff;
+            margin-bottom: 30px;
+        }
+
+        .form-label {
+            font-size: 1.1rem;
+        }
+
+        .btn-submit {
+            font-size: 1.1rem;
+            padding: 10px 20px;
+        }
+
+        .back-link {
+            margin-top: 20px;
+            display: block;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Select Key to Decrypt</h1>
+
+        <!-- Form for Decrypting -->
+        <form action="/cipher/decrypt" method="post">
+            <!-- Dropdown to select a key -->
+            <div class="mb-3">
+                <label for="keyName" class="form-label">Key:</label>
+                <select id="keyName" name="keyName" class="form-select" required>
+                    <th:block th:each="key : ${keys}">
+                        <option th:value="${key.name}" th:text="${key.name}"></option>
+                    </th:block>
+                </select>
+            </div>
+
+            <!-- Input for shift value -->
+            <div class="mb-3">
+                <label for="shift" class="form-label">Shift:</label>
+                <input type="number" id="shift" name="shift" class="form-control" min="0" required>
+            </div>
+
+            <!-- Submit button -->
+            <button type="submit" class="btn btn-primary btn-submit">Decrypt</button>
+        </form>
+
+        <!-- Link back to Main Menu -->
+        <a href="/cipher/menu" class="back-link">Back to Main Menu</a>
+    </div>
+
+    <!-- Bootstrap JS (Optional for interactivity) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

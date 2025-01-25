@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decryption Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Decryption Tool</h1>
+    <form id="decryptionForm" method="POST" novalidate>
+        <label for="message">Encrypted Message:</label><br>
+        <textarea id="message" name="message" rows="4" cols="50" placeholder="Enter your encrypted message"></textarea><br><br>
+        <label for="useGUI">Use GUI:</label>
+        <input type="checkbox" id="useGUI" name="useGUI" checked><br><br>
+        <button type="submit">Decrypt</button>
+    </form>
+
+    <h2>Results:</h2>
+    <div id="results"></div>
+    <div id="keySaveForm" style="display:none;">
+        <label for="keyName">Enter Key Name:</label>
+        <input type="text" id="keyName" placeholder="Key Name">
+        <button id="saveKeyButton">Save Key</button>
+    </div>
+
+    <script>
+        let solutions = [];
+
+        document.getElementById('decryptionForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const message = document.getElementById('message').value;
+            const useGUI = document.getElementById('useGUI').checked;
+
+            try {
+                const response = await axios.post('/cipher/decryptAlgo', { message, useGUI });
+
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = '';
+
+                if (response.data.status === 'success') {
+                    solutions = response.data.solutions;
+                    resultsDiv.innerHTML = `<p>Found ${solutions.length} solutions:</p>`;
+                    solutions.forEach((solution, index) => {
+                        resultsDiv.innerHTML += `
+                            <p>
+                                Solution #${index + 1}: ${solution}
+                                <button onclick="chooseSolution(${index})">Choose</button>
+                            </p>`;
+                    });
+                } else {
+                    resultsDiv.innerHTML = `<p>Error: ${response.data.message}</p>`;
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById('results').innerHTML = '<p>An error occurred while processing your request.</p>';
+            }
+        });
+
+        async function chooseSolution(index) {
+            document.getElementById('keySaveForm').style.display = 'block';
+            document.getElementById('saveKeyButton').onclick = async function() {
+                const keyName = document.getElementById('keyName').value;
+                if (!keyName) {
+                    alert('Please enter a key name.');
+                    return;
+                }
+
+                try {
+                    const response = await axios.post('/cipher/saveKey', { choice: index, keyName });
+                    alert(response.data.message);
+                    if (response.data.status === 'success') {
+                        document.getElementById('keySaveForm').style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert('An error occurred while saving the key.');
+                }
+            };
+        }
+    </script>
+</body>
+</html>

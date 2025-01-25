@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Cipher Key</title>
+    <!-- Link to Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f8fc;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        h1 {
+            text-align: center;
+            color: #007bff;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .back-link {
+            margin-top: 20px;
+            display: block;
+            text-align: center;
+        }
+    </style>
+
+    <script>
+        let currentCharIndex = 0;
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        let substitutions = {};
+
+        function nextCharacter() {
+            if (currentCharIndex < alphabet.length) {
+                let currentChar = alphabet[currentCharIndex];
+                document.getElementById('current-char').textContent = currentChar + " =";
+                document.getElementById('shiftValue').value = ''; // Clear the input field for the new character
+                currentCharIndex++;
+            }
+        }
+
+        function addSubstitution(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent default form submission behavior
+
+                let substitutionValue = document.getElementById('shiftValue').value.trim();
+                if (substitutionValue.length === 1) {
+                    let currentChar = alphabet[currentCharIndex - 1];
+                    substitutions[currentChar] = substitutionValue.charAt(0); // Save the substitution
+
+                    // Check for duplicate hidden inputs
+                    if (!document.querySelector(`input[name='substitution[${currentChar}]']`)) {
+                        let hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.name = `substitution[${currentChar}]`;
+                        hiddenInput.value = substitutionValue.charAt(0);
+                        document.getElementById('substitutionForm').appendChild(hiddenInput);
+                    }
+
+                    if (currentCharIndex < alphabet.length) {
+                        nextCharacter();
+                    } else {
+                        alert("All substitutions complete. Submitting the form...");
+                        document.getElementById('substitutionForm').submit();
+                    }
+                } else {
+                    alert("Please enter a single character for the substitution.");
+                }
+            }
+        }
+
+        window.onload = function () {
+            nextCharacter();
+        };
+
+        document.getElementById('substitutionForm').addEventListener('submit', function (event) {
+            if (currentCharIndex < alphabet.length) {
+                event.preventDefault(); // Prevent submission
+                alert("Please complete the substitutions.");
+            }
+        });
+    </script>
+</head>
+<body>
+
+<div class="container">
+    <h1>Create Cipher Key</h1>
+    
+    <form id="substitutionForm" th:action="@{/cipher/createKey}" method="POST">
+        <div class="form-group">
+            <label for="name">Enter Key Name:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+
+        <div class="form-group">
+            <label id="current-char"></label>
+            <input type="text" id="shiftValue" name="shiftValue" required onkeydown="addSubstitution(event)">
+        </div>
+
+        <div class="form-group">
+            <button type="submit" style="display: none;">Submit Key</button>
+        </div>
+    </form>
+
+    <a href="/cipher/menu" class="back-link">Back to Main Menu</a>
+
+</div>
+
+<!-- Bootstrap JS (Optional for interactivity) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
